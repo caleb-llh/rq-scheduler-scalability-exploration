@@ -1,0 +1,5 @@
+rq-scheduler
+redis
+fastapi
+uvicorn[standard]
+requests

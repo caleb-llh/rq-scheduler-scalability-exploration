@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+  redis:
+    image: redis
+    restart: always
+    ports:
+    - '6379:6379'
+  
+  schedulerA:
+    build: 
+      context: ./scheduler
+      dockerfile: Dockerfile
+    image: scheduler
+    environment:
+      - INITIAL_SLEEP_SECONDS=5
+      - TIMER_SECONDS=10
+    ports:
+      - '15563:15563'
+
+  schedulerB:
+    build: 
+      context: ./scheduler
+      dockerfile: Dockerfile
+    image: scheduler
+    environment:
+      - INITIAL_SLEEP_SECONDS=0
+      - TIMER_SECONDS=10
+    ports:
+      - '15564:15563'
+
+  workers:
+      image: workers
+      build:
+          context: .
+          dockerfile: workers/Dockerfile
+      volumes:
+          - ./workers:/usr/src/workers
+      links:
+          - redis
+      depends_on:
+          - redis
+  rq-dashboard:
+      image: rq-dashboard
+      build:
+          context: .
+          dockerfile: rq-dashboard/Dockerfile
+      ports:
+          - '9181:9181'
+      expose:
+          - "9181"
+      links:
+          - redis
+      depends_on:
+          - redis
+
+  target-api-server:
+    build: 
+      context: ./target-api-server
+      dockerfile: Dockerfile
+    image: target-api-server
+    ports:
+      - '15565:15565'
